@@ -1,6 +1,6 @@
 import express from 'express';
-// import model from '../../models/ollama.js';
-import model from '../../models/openai.js';
+import model from '../../models/ollama.js';
+// import model from '../../models/openai.js';
 import { addDocuments, removeAllDocuments, searchDocuments } from '../../retriever/qdrant.js';
 
 const router = express.Router();
@@ -20,17 +20,34 @@ router.post('/', async (req, res) => {
 
         console.log(contextDocs, "<--contextDocs");
 
+        // Bugungi sanani tekshirish
+        const lastMessage = messages[messages.length - 1];
+        const dateKeywords = ['bugun', 'sana', 'kun'];
+        const isAskingDate = lastMessage && dateKeywords.some(keyword => 
+            lastMessage.content.toLowerCase().includes(keyword)
+        );
+
         // Kontekstni xabarlarga qo'shish
         const augmentedMessages = [...messages];
         if (contextDocs.length > 0) {
-            // const context = contextDocs.map(doc => doc.payload.content).join('\n\n');
             const context = contextDocs.map(doc => doc).filter(Boolean).join('\n\n');
             console.log('Kontekst:', context);
             augmentedMessages.unshift({
                 role: 'system',
-                // content: `Quyidagi ma'lumotlar asosida javob bering:\n\n${context}`
-                // content: `Your name is Defonic. You are is helpful assistant.:\n\n${context}`
                 content: `Sizning O'zbekiston Milliy Statistika qo'mitasining yordamchi assistantisiz. Quyidagi ma'lumotlar asosida javob bering::\n\n${context}`
+            });
+        }
+
+        // Agar sana so'ralgan bo'lsa
+        if (isAskingDate) {
+            const today = new Date().toLocaleDateString('uz-UZ', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            augmentedMessages.unshift({
+                role: 'system',
+                content: `Bugungi sana: ${today}`
             });
         }
 
@@ -65,4 +82,3 @@ router.post('/remove-all-documents', async (req, res) => {
 });
 
 export default router;
-
