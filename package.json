@@ -1,0 +1,25 @@
+{
+  "name": "noderag",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server/app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@huggingface/transformers": "^3.4.0",
+    "@langchain/community": "^0.3.35",
+    "@langchain/core": "^0.3.42",
+    "@qdrant/qdrant-js": "^1.13.0",
+    "@xenova/transformers": "^2.15.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.18.3",
+    "uuid": "^11.1.0"
+  }
+}
