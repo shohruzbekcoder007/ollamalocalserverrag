@@ -8,9 +8,9 @@ class OllamaModel {
     async invoke(messages) {
         console.log('messages', messages)
         try {
-            let prompt = ``;
-            let user = ``;
-            let assistant = ``;
+            let prompt = '';
+            let user = '';
+            let assistant = '';
             messages.forEach(msg => {
                 if (msg.role === 'system') {
                     prompt = prompt + (` ${msg.content}`);
@@ -23,46 +23,43 @@ class OllamaModel {
 
             console.log(prompt, user, assistant, "<--prompt, user, assistant");
 
-            const response = await fetch(`${this.baseUrl}/api/chat`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+            const response = await fetch(`${this.baseUrl}/api/generate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify({
-                  model: "gemma2:9b",
-                  messages: [
-                    { "role": "system", "content": `${prompt}` },
-                    { "role": "user", "content": `${user}` }
-                  ]
+                    model: this.model,
+                    prompt: (prompt +user).trim(),
+                    // system: prompt.trim(),
+                    stream: false,
+                    options: {
+                        temperature: 0.7,
+                        top_k: 40,
+                        top_p: 0.9,
+                        repeat_penalty: 1.1,
+                        max_tokens: 500
+                    }
                 })
-              })
-
-            // const response = await fetch(`${this.baseUrl}/api/generate`, {
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json',
-            //     },
-            //     body: JSON.stringify({
-            //         model: this.model,
-            //         prompt: prompt,
-            //         stream: false,
-            //         options: {
-            //             temperature: 0.5,  // Kamroq randomness
-            //             top_k: 10,
-            //             top_p: 0.8,
-            //             repeat_penalty: 1.1,
-            //             max_tokens: 300,  // Kamroq token ishlatish
-            //             num_threads: 4  // CPU yadrolaridan samarali foydalanish
-            //         }
-            //     }),
-            //     // signal: controller.signal  // Timeout signal
-            // });
+            });
 
             if (!response.ok) {
                 throw new Error(`Ollama API xatoligi: ${response.status}`);
             }
 
-            const result = await response.json();
+            const text = await response.text();
+            console.log('Raw response:', text);
+            
+            let result;
+            try {
+                result = JSON.parse(text);
+            } catch (parseError) {
+                console.error('JSON parse error:', parseError);
+                console.log('Raw response:', text);
+                throw new Error('Invalid JSON response from Ollama API');
+            }
+
             return {
-                // content: "Kechirasiz, hozir javob bera olmadim. Iltimos, qayta urinib ko'ring."
                 content: result.response || "Kechirasiz, hozir javob bera olmadim. Iltimos, qayta urinib ko'ring."
             };
         } catch (error) {
